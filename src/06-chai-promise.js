@@ -72,18 +72,64 @@
  *   //   { status: "rejected", reason: "Yeh chai available nahi hai!" }
  *   // ]
  */
+const CHAI_PRICES = { 
+  cutting: 10, 
+  special: 20, 
+  ginger: 15, 
+  masala: 25 
+};
+
 export function orderChai(type, quantity) {
-  // Your code here
+  return new Promise((resolve, reject) => {
+    if (!CHAI_PRICES[type]) {
+      return reject(new Error("Yeh chai available nahi hai!"));
+    }
+
+    if (typeof quantity !== "number" || quantity <= 0) {
+      return reject(new Error("Kitni chai chahiye bhai?"));
+    }
+
+    setTimeout(() => {
+      const total = CHAI_PRICES[type] * quantity;
+      resolve({ type, quantity, total });
+    }, 100);
+  });
 }
 
 export function checkIngredients(ingredient) {
-  // Your code here
+  return new Promise((resolve, reject) => {
+    const validIngredients = ["tea", "milk", "sugar", "ginger", "cardamom"];
+    
+    if (validIngredients.includes(ingredient)) {
+      resolve({ ingredient, available: true });
+    } else {
+      reject(new Error(`${ingredient} khatam ho gaya!`));
+    }
+  });
 }
 
 export function prepareChaiWithTimeout(type, timeoutMs) {
-  // Your code here
+  const chaiPromise = orderChai(type, 1);
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error("Bahut der ho gayi, chai nahi bani!"));
+    }, timeoutMs);
+  });
+
+  return Promise.race([chaiPromise, timeoutPromise]);
 }
 
 export function processChaiQueue(orders) {
-  // Your code here
+  if (!orders || orders.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  const promises = orders.map(order => 
+    orderChai(order.type, order.quantity)
+      .then(value => ({ status: "fulfilled", value }))
+      .catch(err => ({ status: "rejected", reason: err.message }))
+  );
+
+  return Promise.all(promises);
 }

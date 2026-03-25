@@ -72,16 +72,63 @@
  *   isLassiStand({});                       // => false
  */
 export function LassiStand(name, city) {
-  // Your code here
+  if (typeof name !== 'string' || typeof city !== 'string') {
+    throw new Error('Name and city must be strings');
+  }
+  this.name = name;
+  this.city = city;
+  this.menu = [];
+  this.orders = [];
+  this._nextOrderId = 1;
 }
 
-// Add prototype methods here:
-// LassiStand.prototype.addFlavor = function(flavor, price) { ... }
-// LassiStand.prototype.takeOrder = function(customerName, flavor, quantity) { ... }
-// LassiStand.prototype.completeOrder = function(orderId) { ... }
-// LassiStand.prototype.getRevenue = function() { ... }
-// LassiStand.prototype.getMenu = function() { ... }
+LassiStand.prototype.addFlavor = function(flavor, price) {
+  if (typeof flavor !== 'string' || typeof price !== 'number' || price <= 0) {
+    return -1;
+  }
+  if (this.menu.some(item => item.flavor === flavor)) {
+    return -1; // Duplicate flavor
+  }
+  this.menu.push({ flavor, price });
+  return this.menu.length;
+};
+
+LassiStand.prototype.takeOrder = function(customerName, flavor, quantity) {
+  const menuItem = this.menu.find(item => item.flavor === flavor);
+  if (!menuItem || typeof quantity !== 'number' || quantity <= 0) {
+    return -1;
+  }
+  const order = {
+    id: this._nextOrderId++,
+    customer: customerName,
+    flavor,
+    quantity,
+    total: menuItem.price * quantity,
+    status: "pending"
+  };
+  this.orders.push(order);
+  return order.id;
+};
+
+LassiStand.prototype.completeOrder = function(orderId) {
+  const order = this.orders.find(o => o.id === orderId);
+  if (order && order.status === "pending") {
+    order.status = "completed";
+    return true;
+  }
+  return false;
+};
+
+LassiStand.prototype.getRevenue = function() {
+  return this.orders
+    .filter(order => order.status === "completed")
+    .reduce((sum, order) => sum + order.total, 0);
+};
+
+LassiStand.prototype.getMenu = function() {
+  return this.menu.map(item => ({ ...item })); // Return a copy of the menu
+}; 
 
 export function isLassiStand(obj) {
-  // Your code here
+  return obj instanceof LassiStand;
 }
